@@ -34,7 +34,7 @@ export function circularPositions(state: GraphState, width: number, height: numb
 
   const map = new Map<string, { x: number; y: number; depth: number; radius: number; theta: number }>();
   h.each(d => {
-    const theta = d.x;
+    const theta = (d.x ?? 0); 
     const radius = (d as any).radius;
     const x = Math.cos(theta - Math.PI/2) * radius;
     const y = Math.sin(theta - Math.PI/2) * radius;
