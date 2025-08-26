@@ -48,7 +48,8 @@ export const useStore = create<GraphState & Actions>((set, get) => ({
 
   addBeliefPending: (text, notes, confidence, upstreamId) => {
     const state = get();
-    // snapshot BEFORE mutation for undo
+
+    // Snapshot BEFORE mutation so Undo works
     if (state.mode === "SANDBOX") {
       const snap = JSON.stringify({
         mode: state.mode,
@@ -93,12 +94,12 @@ export const useStore = create<GraphState & Actions>((set, get) => ({
 
     const next: Partial<GraphState> = { nodes: { ...st.nodes, [id]: updated }, edges };
 
-    // block logic for Professional
+    // Professional blocking logic
     if (st.mode === "PROFESSIONAL") {
       if (status === "contradictory" || status === "harmful" || status === "incoherent") {
         next.blockedByNodeId = id;
-      } else {
-        if (st.blockedByNodeId === id) next.blockedByNodeId = null;
+      } else if (st.blockedByNodeId === id) {
+        next.blockedByNodeId = null;
       }
     }
 
@@ -152,13 +153,11 @@ export const useStore = create<GraphState & Actions>((set, get) => ({
     set(parsed);
     document.body.setAttribute("data-mode", parsed.mode);
     localStorage.setItem("belief-map", JSON.stringify(get()));
-  
-  ,
+  },
 
   reset: () => {
     try { localStorage.removeItem("belief-map"); } catch {}
     set({ ...initial });
     document.body.removeAttribute("data-mode");
   }
-}
-));
+}));
