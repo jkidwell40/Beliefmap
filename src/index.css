@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mode watermark (tiled, faint, behind UI) */
+:root {
+  --wm-text: 'SANDBOX MODE';
+  --wm-color: rgba(20, 20, 20, 0.06);
+}
+body[data-mode='PROFESSIONAL'] {
+  --wm-text: 'PROFESSIONAL MODE';
+}
+.canvas-watermark {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg, transparent 0 90px, var(--wm-color) 90px 120px),
+    repeating-linear-gradient(-45deg, transparent 0 90px, var(--wm-color) 90px 120px);
+  mask: radial-gradient(transparent 0 40px, black 80px);
+}
+.canvas-watermark::after {
+  content: var(--wm-text);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%) rotate(-30deg);
+  font-size: 7rem;
+  font-weight: 700;
+  color: var(--wm-color);
+  white-space: nowrap;
+}
