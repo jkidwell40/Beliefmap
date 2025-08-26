@@ -9,9 +9,15 @@ export default function App() {
   const importState = useStore(s => s.importState);
 
   useEffect(() => {
-    const saved = localStorage.getItem("belief-map");
-    if (saved) {
-      try { importState(saved); } catch {}
+    const q = new URLSearchParams(window.location.search);
+    const shouldReset = q.has("reset") || q.has("new");
+    if (!shouldReset) {
+      const saved = localStorage.getItem("belief-map");
+      if (saved) {
+        try { importState(saved); } catch {}
+      }
+    } else {
+      try { localStorage.removeItem("belief-map"); } catch {}
     }
   }, [importState]);
 

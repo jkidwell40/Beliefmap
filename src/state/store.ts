@@ -14,6 +14,7 @@ type Actions = {
   pushHistory: () => void;
   undo: () => void;
   importState: (json: string) => void;
+  reset: () => void;
 };
 
 const initial: GraphState = {
@@ -151,5 +152,13 @@ export const useStore = create<GraphState & Actions>((set, get) => ({
     set(parsed);
     document.body.setAttribute("data-mode", parsed.mode);
     localStorage.setItem("belief-map", JSON.stringify(get()));
+  
+  ,
+
+  reset: () => {
+    try { localStorage.removeItem("belief-map"); } catch {}
+    set({ ...initial });
+    document.body.removeAttribute("data-mode");
   }
-}));
+}
+));

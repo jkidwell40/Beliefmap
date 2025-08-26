@@ -21,6 +21,7 @@ export default function Toolbar() {
   const setNodeResult = useStore(s => s.setNodeResult);
   const setBlockedBy = useStore(s => s.setBlockedBy);
   const selectActive = useStore(s => s.selectActive);
+  const reset = useStore(s => s.reset);
   const undo = useStore(s => s.undo);
 
   const [showEntry, setShowEntry] = useState(false);
@@ -97,6 +98,7 @@ export default function Toolbar() {
   return (
     <div className="absolute left-4 top-4 z-40 flex flex-wrap gap-2">
       <button className="px-3 py-2 rounded bg-zinc-900 text-white disabled:opacity-50" disabled={!canAdd} onClick={()=>setShowEntry(true)}>Add Belief</button>
+      <button className="px-3 py-2 rounded border" onClick={reset}>New Map</button>
       {mode === "SANDBOX" && (
         <>
           <button className="px-3 py-2 rounded border" onClick={doSuggest}>Suggest Belief (AI)</button>
