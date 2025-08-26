@@ -14,7 +14,6 @@ export const handler: Handler = async (event) => {
     if (useMock) {
       return ok({ suggestedBelief: "Expand targeted child benefits reduces child poverty.", notesHint: "Compare RCT/meta-analyses; consider cost-neutral options.", confidence: 60 });
     }
-    // Minimal real suggestion; replace with Claude call if desired.
     return ok({ suggestedBelief: "Universal school meals improve attendance.", notesHint: "Check districts that implemented universal meals.", confidence: 55 });
   } catch (e: any) {
     return { statusCode: 400, body: JSON.stringify({ error: String(e.message ?? e) }) };

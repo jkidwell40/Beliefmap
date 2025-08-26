@@ -1,13 +1,26 @@
 import { useStore } from "../state/store";
 import { analyze, suggest } from "../lib/api";
 import { useState } from "react";
+import type { GraphState, BeliefNode } from "../types";
+
+function chainFrom(state: GraphState, leafId: string): BeliefNode[] {
+  const res: BeliefNode[] = [];
+  let cur = state.nodes[leafId];
+  while (cur && !cur.isCore) {
+    res.unshift(cur);
+    const parentId = cur.upstreamIds[0] ?? state.coreId!;
+    cur = state.nodes[parentId];
+  }
+  return res;
+}
 
 export default function Toolbar() {
-  const { mode, coreId, blockedByNodeId, nodes, activeUpstreamId } = useStore();
+  const state = useStore();
+  const { mode, coreId, blockedByNodeId, nodes, activeUpstreamId } = state;
   const addBeliefPending = useStore(s => s.addBeliefPending);
   const setNodeResult = useStore(s => s.setNodeResult);
   const setBlockedBy = useStore(s => s.setBlockedBy);
-  const updateNodeNotesConfidence = useStore(s => s.updateNodeNotesConfidence);
+  const selectActive = useStore(s => s.selectActive);
   const undo = useStore(s => s.undo);
 
   const [showEntry, setShowEntry] = useState(false);
@@ -21,17 +34,19 @@ export default function Toolbar() {
   const addBelief = async () => {
     if (!text.trim()) return;
     setBusy(true);
-    const newId = addBeliefPending(text.trim(), notes.trim(), conf, activeUpstreamId ?? coreId);
+    const parent = activeUpstreamId ?? coreId;
+    const newId = addBeliefPending(text.trim(), notes.trim(), conf, parent);
     try {
       const core = nodes[coreId!];
-      const up = activeUpstreamId ? [nodes[activeUpstreamId]] : [core];
+      const upstreamChain = parent ? chainFrom(state, parent) : [];
       const result = await analyze({
         mode,
         coreBelief: { text: core.text, notes: core.notes, confidence: core.confidence },
-        upstreamBeliefs: up.map(n => ({ text: n.text, notes: n.notes, confidence: n.confidence, status: n.status })),
+        upstreamBeliefs: upstreamChain.map(n => ({ text: n.text, notes: n.notes, confidence: n.confidence, status: n.status })),
         newBelief: { text, notes, confidence: conf }
       });
       setNodeResult(newId, result.status as any, result.summary, result.fullExplanation);
+      selectActive(newId); // chain by default
       if (mode === "PROFESSIONAL") {
         if (["harmful","contradictory","incoherent"].includes(result.status)) setBlockedBy(newId);
       }
@@ -51,13 +66,13 @@ export default function Toolbar() {
     if (!blockedNode) return;
     const core = nodes[coreId!];
     const parentId = blockedNode.upstreamIds[0] ?? coreId!;
-    const up = [nodes[parentId]];
+    const upstreamChain = chainFrom(state, parentId);
     setBusy(true);
     try {
       const result = await analyze({
         mode,
         coreBelief: { text: core.text, notes: core.notes, confidence: core.confidence },
-        upstreamBeliefs: up.map(n => ({ text: n.text, notes: n.notes, confidence: n.confidence, status: n.status })),
+        upstreamBeliefs: upstreamChain.map(n => ({ text: n.text, notes: n.notes, confidence: n.confidence, status: n.status })),
         newBelief: { text: blockedNode.text, notes: blockedNode.notes ?? "", confidence: blockedNode.confidence }
       });
       setNodeResult(blockedNode.id, result.status as any, result.summary, result.fullExplanation);

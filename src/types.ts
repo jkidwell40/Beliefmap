@@ -5,12 +5,12 @@ export interface BeliefNode {
   id: string;
   text: string;
   notes?: string;
-  confidence: number;   // 0–100
-  status: BeliefStatus; // core is "protected"
+  confidence: number;
+  status: BeliefStatus;
   tldr?: string;
   explanation?: string;
-  upstreamIds: string[]; // primary parent is upstreamIds[0]
-  depth: number;         // derived
+  upstreamIds: string[];
+  depth: number;
   position?: { x: number; y: number };
   isCore: boolean;
   createdAt: string;
@@ -30,7 +30,7 @@ export interface GraphState {
   edges: Record<string, BeliefEdge>;
   coreId: string | null;
   activeUpstreamId: string | null;
-  blockedByNodeId: string | null; // Professional: the flagged node blocking growth
-  history: string[];              // Sandbox only
+  blockedByNodeId: string | null;
+  history: string[];
   schemaVersion: "v1";
 }

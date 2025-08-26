@@ -29,15 +29,16 @@ export function circularPositions(state: GraphState, width: number, height: numb
   const rStep = Math.max(60, (maxRadius - r0) / Math.max(1, maxDepth));
 
   h.each(d => { (d as any).radius = r0 + d.depth * rStep; });
-  const cl = cluster<{radius:number}>().size([Math.PI*2, maxRadius]);
+
+  const cl = cluster<{ radius: number }>().size([Math.PI * 2, maxRadius]);
   cl(h as any);
 
   const map = new Map<string, { x: number; y: number; depth: number; radius: number; theta: number }>();
   h.each(d => {
-    const theta = (d.x ?? 0); 
-    const radius = (d as any).radius;
-    const x = Math.cos(theta - Math.PI/2) * radius;
-    const y = Math.sin(theta - Math.PI/2) * radius;
+    const theta = (d.x ?? 0);
+    const radius = Number((d as any).radius) || 0;
+    const x = Math.cos(theta - Math.PI / 2) * radius;
+    const y = Math.sin(theta - Math.PI / 2) * radius;
     map.set(d.data.id, { x, y, depth: d.depth, radius, theta });
   });
   return { pos: map, r0, rStep };

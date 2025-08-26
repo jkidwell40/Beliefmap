@@ -47,6 +47,22 @@ export const useStore = create<GraphState & Actions>((set, get) => ({
 
   addBeliefPending: (text, notes, confidence, upstreamId) => {
     const state = get();
+    // snapshot BEFORE mutation for undo
+    if (state.mode === "SANDBOX") {
+      const snap = JSON.stringify({
+        mode: state.mode,
+        nodes: state.nodes,
+        edges: state.edges,
+        coreId: state.coreId,
+        activeUpstreamId: state.activeUpstreamId,
+        blockedByNodeId: state.blockedByNodeId,
+        history: [],
+        schemaVersion: state.schemaVersion
+      });
+      const history = [...state.history, snap].slice(-50);
+      set({ history });
+    }
+
     const parent = upstreamId ?? state.activeUpstreamId ?? state.coreId!;
     const id = uid("node");
     const node: BeliefNode = {
@@ -56,7 +72,6 @@ export const useStore = create<GraphState & Actions>((set, get) => ({
     };
     const edge: BeliefEdge = { id: uid("edge"), sourceId: parent!, targetId: id, kind: "pending" };
     set({ nodes: { ...state.nodes, [id]: node }, edges: { ...state.edges, [edge.id]: edge } });
-    if (state.mode === "SANDBOX") get().pushHistory();
     localStorage.setItem("belief-map", JSON.stringify(get()));
     return id;
   },
@@ -77,7 +92,7 @@ export const useStore = create<GraphState & Actions>((set, get) => ({
 
     const next: Partial<GraphState> = { nodes: { ...st.nodes, [id]: updated }, edges };
 
-    // Professional blocking logic
+    // block logic for Professional
     if (st.mode === "PROFESSIONAL") {
       if (status === "contradictory" || status === "harmful" || status === "incoherent") {
         next.blockedByNodeId = id;
@@ -106,7 +121,16 @@ export const useStore = create<GraphState & Actions>((set, get) => ({
   pushHistory: () => {
     const st = get();
     if (st.mode !== "SANDBOX") return;
-    const snap = JSON.stringify({ ...st, history: [] });
+    const snap = JSON.stringify({
+      mode: st.mode,
+      nodes: st.nodes,
+      edges: st.edges,
+      coreId: st.coreId,
+      activeUpstreamId: st.activeUpstreamId,
+      blockedByNodeId: st.blockedByNodeId,
+      history: [],
+      schemaVersion: st.schemaVersion
+    });
     const history = [...st.history, snap].slice(-50);
     set({ history });
   },
@@ -117,6 +141,7 @@ export const useStore = create<GraphState & Actions>((set, get) => ({
     const last = st.history[st.history.length - 1];
     const parsed = JSON.parse(last) as GraphState;
     set({ ...parsed, history: st.history.slice(0, -1) });
+    document.body.setAttribute("data-mode", parsed.mode);
     localStorage.setItem("belief-map", JSON.stringify(get()));
   },
 
